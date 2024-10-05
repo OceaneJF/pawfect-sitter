@@ -24,3 +24,6 @@
 npm-debug.log
 yarn-error.log
 ###< symfony/webpack-encore-bundle ###
+/.idea/commandlinetools/schemas/frameworkDescriptionVersion1.1.4.xsd
+/.idea/commandlinetools/Symfony_05_10_2024_19_34.xml
+/.idea/pawfect-sitter.iml
