@@ -1,15 +1,16 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-  content: [
-    "./assets/**/*.js",
-    "./assets/**/*.vue",
-    "./templates/**/*.html.twig",
-    "./node_modules/flowbite/**/*.js"
-  ],
-  theme: {
-    extend: {},
-  },
-  plugins: [
-    require('flowbite/plugin')
-  ],
+    darkMode: 'class',
+    content: [
+        "./assets/**/*.js",
+        "./assets/**/*.vue",
+        "./templates/**/*.html.twig",
+        "./node_modules/flowbite/**/*.js"
+    ],
+    theme: {
+        extend: {}
+    },
+    plugins: [
+        require('flowbite/plugin')
+    ],
 }
