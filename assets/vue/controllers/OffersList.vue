@@ -32,7 +32,7 @@ provide("updateOfferList", updateOfferList)
           type="button">
     Ajouter une offre
   </button>
-  <div class="flex justify-center gap-6 flex-wrap mt-10">
+  <div class="flex justify-start gap-6 flex-wrap mt-10">
     <article
         v-for="offer in offersList"
         class="w-72 bg-white group relative rounded-lg overflow-hidden shadow-lg hover:shadow-2xl transform duration-200 ">
@@ -50,10 +50,10 @@ provide("updateOfferList", updateOfferList)
         <p>{{ offer.duration }}</p>
         <p>{{ offer.pricing }} € / heures</p>
         <div class="flex items-center justify-between">
-          <button
-              class="mt-3 text-white bg-indigo-500 hover:bg-indigo-800 focus:ring-4 focus:ring-indigo-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-indigo-600 dark:hover:bg-indigo-500 focus:outline-none dark:focus:ring-indigo-800">
+          <a :href="`/offer/${offer.id}`"
+             class="mt-3 text-white bg-indigo-500 hover:bg-indigo-800 focus:ring-4 focus:ring-indigo-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-indigo-600 dark:hover:bg-indigo-500 focus:outline-none dark:focus:ring-indigo-800">
             Voir plus
-          </button>
+          </a>
           <button @click="removeOffer(offer.id)"
                   class="text-white bg-red-700 hover:bg-red-800 focus:ring-4 focus:outline-none focus:ring-red-300 font-medium rounded-lg text-sm p-2.5 text-center inline-flex items-center me-2 dark:bg-red-600 dark:hover:bg-red-700 dark:focus:ring-red-800">
             <i class="fa-solid fa-trash"></i>

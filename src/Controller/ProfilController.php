@@ -7,14 +7,15 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 
-class IndexController extends AbstractController
+class ProfilController extends AbstractController
 {
-    #[Route('/', name: 'app_index')]
+    #[Route('/profil', name: 'app_profil')]
     public function index(OfferRepository $offerRepository): Response
     {
-        return $this->render('index/index.html.twig', [
-            'controller_name' => 'IndexController',
-            'offers' => $offerRepository->findBy([], ['id' => 'DESC'], 3)
+        $user = $this->getUser();
+        return $this->render('profil/index.html.twig', [
+            'controller_name' => 'ProfilController',
+            'offers' => $offerRepository->findBy(["user" => $user], ['id' => 'DESC'], 3)
         ]);
     }
 }

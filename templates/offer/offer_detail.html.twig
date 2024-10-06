@@ -1,0 +1,67 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Offer detail!{% endblock %}
+
+{% block body %}
+    <section class="py-8 md:py-16 my-20">
+        <div class="max-w-screen-xl px-4 mx-auto 2xl:px-0">
+            <div class="lg:grid lg:grid-cols-2 lg:gap-8 xl:gap-16">
+                <div class="shrink-0 max-w-md lg:max-w-lg mx-auto">
+                    <img class="w-full dark:hidden"
+                         src="{{ offer.imageName ? asset('/img/animals/'~offer.imageName) : "https://ralfvanveen.com/wp-content/uploads/2021/06/Espace-r%C3%A9serv%C3%A9-_-Glossaire.svg" }}"
+                         alt=""/>
+                    <img class="w-full hidden dark:block"
+                         src="{{ offer.imageName ? asset('/img/animals/'~offer.imageName) : "https://ralfvanveen.com/wp-content/uploads/2021/06/Espace-r%C3%A9serv%C3%A9-_-Glossaire.svg" }}"
+                         alt=""/>
+                </div>
+                
+                <div class="mt-6 sm:mt-8 lg:mt-0">
+                    <h1
+                            class="text-xl font-semibold text-gray-900 sm:text-2xl dark:text-white"
+                    >
+                        {{ offer.name }} - {{ offer.type }} - {{ offer.age }}
+                    </h1>
+                    <div class="mt-4 sm:items-center sm:gap-4 sm:flex">
+                        <p
+                                class="text-2xl font-extrabold text-gray-900 sm:text-3xl dark:text-white"
+                        >
+                            {{ offer.pricing }} €/h
+                        </p>
+                    
+                    </div>
+                    
+                    <hr class="my-6 md:my-8 border-gray-200 dark:border-gray-800"/>
+                    
+                    <p class="mb-3 text-gray-500 dark:text-gray-400">
+                        <span class="text-lg font-bold ">Adresse :</span> {{ offer.address }}
+                    </p>
+                    
+                    <p class="mb-3 text-gray-500 dark:text-gray-400">
+                        <span class="text-lg font-bold ">Nom propriétaire :</span> {{ offer.nameOwner }}
+                    </p>
+                    
+                    
+                    <p class="mb-3 text-gray-500 dark:text-gray-400">
+                        <span class="text-lg font-bold">Durée de la mission :</span> {{ offer.duration }}
+                    </p>
+                    
+                    <div class="rounded text-gray-500  border border-gray-300 p-3">
+                        <h2 class="text-lg font-bold text-center">Contact</h2>
+                        <p>
+                            <span class="text-lg font-bold">Email :</span> {{ offer.user.email ?? "Pas d'email" }}
+                        </p>
+                        <p>
+                            <span class="text-lg font-bold">Téléphone :</span> {{ offer.user.phone ?? "Pas de téléphone" }}
+                        </p>
+                        <p>
+                            <span class="text-lg font-bold">FaceBook :</span> {{ offer.user.facebook ?? "Pas de facebook" }}
+                        </p>
+                        <p>
+                            <span class="text-lg font-bold">Instagram :</span> {{ offer.user.instagram ?? "Pas de instagram" }}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+{% endblock %}

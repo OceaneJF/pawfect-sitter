@@ -35,4 +35,12 @@
             </div>
         </div>
     </section>
+    <section class="mx-auto flex flex-col gap-6">
+        <h2 class="text-center text-4xl font-bold">Les 3 dernières offres</h2>
+        <div class="flex justify-center gap-6 flex-wrap">
+            {% for offer in offers %}
+                {% include '/offer/_card.html.twig' %}
+            {% endfor %}
+        </div>
+    </section>
 {% endblock %}

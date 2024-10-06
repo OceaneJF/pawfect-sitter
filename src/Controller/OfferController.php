@@ -23,7 +23,16 @@ class OfferController extends AbstractController
     {
         return $this->render('offer/offers.html.twig', [
             'controller_name' => 'OfferController',
-            'offers' => $offerRepository->findAll(),
+            'offers' => array_reverse($offerRepository->findAll()),
+        ]);
+    }
+
+    #[Route('/offer/{id}', name: 'app_offer_id')]
+    public function offerById(int $id, OfferRepository $offerRepository): Response
+    {
+        return $this->render('offer/offer_detail.html.twig', [
+            'controller_name' => 'OfferController',
+            'offer' => $offerRepository->find($id),
         ]);
     }
 
