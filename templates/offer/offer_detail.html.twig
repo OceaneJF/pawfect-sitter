@@ -39,7 +39,9 @@
                     <p class="mb-3 text-gray-500 dark:text-gray-400">
                         <span class="text-lg font-bold ">Nom propriétaire :</span> {{ offer.nameOwner }}
                     </p>
-                    
+                    <p class="mb-3 text-gray-500 dark:text-gray-400">
+                        <span class="text-lg font-bold">Début de la mission :</span> {{ offer.startDate|date("d/m/Y", "Europe/Paris") }}
+                    </p>
                     
                     <p class="mb-3 text-gray-500 dark:text-gray-400">
                         <span class="text-lg font-bold">Durée de la mission :</span> {{ offer.duration }}

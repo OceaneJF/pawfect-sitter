@@ -17,6 +17,7 @@ const defaultState = {
   address: '',
   nameOwner: '',
   duration: '',
+  startDate: '',
   img: null,
 };
 
@@ -152,6 +153,13 @@ watch(() => props.offer, (newOffer) => {
                      class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
                      placeholder="1 mois" required="">
             </div>
+          </div>
+          <div class="w-full mb-5">
+            <label for="price" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Date début</label>
+            <input type="date" name="offer[startDate]" id="offer_startDate"
+                   v-model="offer.startDate"
+                   class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
+                   placeholder="1 mois" required="">
           </div>
           <button type="submit"
                   data-modal-target="crud-modal" data-modal-toggle="crud-modal"

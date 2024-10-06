@@ -3,17 +3,14 @@
         <hr class="my-6 border-gray-200 sm:mx-auto dark:border-gray-700 lg:my-8"/>
         <div class="sm:flex sm:items-center sm:justify-between">
             <a href="{{ path('app_index') }}" class="flex items-center">
+                <img class="size-10" src="{{ asset('/img/logo.svg') }}" alt="">
                 <span class="self-center text-xl font-semibold whitespace-nowrap dark:text-white">PAWFECT-SITTER</span>
             </a>
             <span class="text-sm text-gray-500 sm:text-center dark:text-gray-400">
                 © 2024 PAWFECT-SITTER. All Rights Reserved.
             </span>
             <div class="flex mt-4 space-x-6 sm:justify-center sm:mt-0">
-                <ul class="text-gray-600 dark:text-gray-400 flex  gap-6">
-                    <li class="mb-4">
-                        <a href="{{ path('app_index_mention') }}" class="hover:underline">Mentions légales</a>
-                    </li>
-                </ul>
+                <a href="{{ path('app_index_mention') }}" class="hover:underline">Mentions légales</a>
             </div>
         </div>
     </div>

@@ -27,15 +27,6 @@ class OfferController extends AbstractController
         ]);
     }
 
-    #[Route('/offer/{id}', name: 'app_offer_id')]
-    public function offerById(int $id, OfferRepository $offerRepository): Response
-    {
-        return $this->render('offer/offer_detail.html.twig', [
-            'controller_name' => 'OfferController',
-            'offer' => $offerRepository->find($id),
-        ]);
-    }
-
     #[Route('/my-offer', name: 'app_offer')]
     #[IsGranted('ROLE_USER')]
     public function offersByUser(OfferRepository $offerRepository, RequestStack $requestStack): Response
@@ -55,6 +46,7 @@ class OfferController extends AbstractController
                 'type' => $offer->getType(),
                 'duration' => $offer->getDuration(),
                 'user' => $offer->getUser()->getId(),
+                'startDate' => $offer->getStartDate(),
                 'img' => $offer->getImageName() ? $baseUrl . '/img/animals/' . $offer->getImageName() : "https://ralfvanveen.com/wp-content/uploads/2021/06/Espace-r%C3%A9serv%C3%A9-_-Glossaire.svg",
             ];
         }, $offerRepository->findBy(['user' => $user]));
@@ -168,5 +160,14 @@ class OfferController extends AbstractController
         }
 
         return $this->json([], 200);
+    }
+
+    #[Route('/offer/{id}', name: 'app_offer_id', methods: ['GET'])]
+    public function offerById(int $id, OfferRepository $offerRepository): Response
+    {
+        return $this->render('offer/offer_detail.html.twig', [
+            'controller_name' => 'OfferController',
+            'offer' => $offerRepository->find($id),
+        ]);
     }
 }

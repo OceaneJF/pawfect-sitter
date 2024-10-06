@@ -31,6 +31,9 @@ class Offer
     #[ORM\Column(length: 255)]
     private ?string $duration = null;
 
+    #[ORM\Column(length: 255)]
+    private ?\DateTime $startDate = null;
+
     #[ORM\Column]
     private ?int $pricing = null;
 
@@ -150,5 +153,16 @@ class Offer
     public function getImageName(): ?string
     {
         return $this->imageName;
+    }
+
+    public function getStartDate(): ?\DateTime
+    {
+        return $this->startDate;
+    }
+
+    public function setStartDate(?\DateTime $startDate): Offer
+    {
+        $this->startDate = $startDate;
+        return $this;
     }
 }
