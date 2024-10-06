@@ -17,4 +17,12 @@ class IndexController extends AbstractController
             'offers' => $offerRepository->findBy([], ['id' => 'DESC'], 3)
         ]);
     }
+
+    #[Route('/mentions-légales', name: 'app_index_mention')]
+    public function mention(): Response
+    {
+        return $this->render('index/mention.html.twig', [
+            'controller_name' => 'IndexController',
+        ]);
+    }
 }

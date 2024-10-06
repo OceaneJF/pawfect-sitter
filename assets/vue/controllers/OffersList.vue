@@ -8,9 +8,23 @@ const props = defineProps({
 })
 
 const offersList = ref(props.offers)
+const selectedOffer = ref(null)
 
-const updateOfferList = (newOffer) => {
-  offersList.value.push(newOffer.value)
+const updateOfferList = (newOffer, isAdded) => {
+  if (isAdded) {
+    offersList.value.push(newOffer.value)
+  } else {
+    const index = offersList.value.findIndex((offer) => offer.id === newOffer.value.id);
+    if (index !== -1) {
+      offersList.value[index] = newOffer.value;
+    } else {
+      offersList.value.push(newOffer.value);
+    }
+  }
+}
+
+const updateOffer = (offer) => {
+  selectedOffer.value = offer
 }
 
 const removeOffer = async (id) => {
@@ -54,14 +68,20 @@ provide("updateOfferList", updateOfferList)
              class="mt-3 text-white bg-indigo-500 hover:bg-indigo-800 focus:ring-4 focus:ring-indigo-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-indigo-600 dark:hover:bg-indigo-500 focus:outline-none dark:focus:ring-indigo-800">
             Voir plus
           </a>
-          <button @click="removeOffer(offer.id)"
-                  class="text-white bg-red-700 hover:bg-red-800 focus:ring-4 focus:outline-none focus:ring-red-300 font-medium rounded-lg text-sm p-2.5 text-center inline-flex items-center me-2 dark:bg-red-600 dark:hover:bg-red-700 dark:focus:ring-red-800">
-            <i class="fa-solid fa-trash"></i>
-            <span class="sr-only">Icon description</span>
-          </button>
+          <div>
+            <button
+                data-modal-target="crud-modal" data-modal-toggle="crud-modal"
+                @click="updateOffer(offer)" class="mr-3">
+              <i class="fa-solid fa-pencil"></i>
+            </button>
+            <button @click="removeOffer(offer.id)"
+                    class="text-white bg-red-700 hover:bg-red-800 focus:ring-4 focus:outline-none focus:ring-red-300 font-medium rounded-lg text-sm p-2.5 text-center inline-flex items-center me-2 dark:bg-red-600 dark:hover:bg-red-700 dark:focus:ring-red-800">
+              <i class="fa-solid fa-trash"></i>
+            </button>
+          </div>
         </div>
       </div>
     </article>
-    <modal-add></modal-add>
+    <modal-add :offer="selectedOffer"></modal-add>
   </div>
 </template>

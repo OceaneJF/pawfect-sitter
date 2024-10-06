@@ -1,10 +1,15 @@
 <script setup>
-import {inject, ref} from "vue";
+import {inject, ref, watch} from "vue";
 import axios from "axios";
 
 const updateOfferList = inject("updateOfferList")
 
+const props = defineProps({
+  offer: Object
+})
+
 const defaultState = {
+  id: null,
   name: '',
   pricing: '',
   type: '',
@@ -18,8 +23,13 @@ const defaultState = {
 const offer = ref(defaultState);
 
 const addOffer = async (e) => {
-  updateOfferList(offer)
-  await axios.post('/offer/add', new FormData(e.target))
+  if (props.offer && offer.value.id !== null) {
+    await axios.post('/offer/update/' + offer.value.id, new FormData(e.target))
+    updateOfferList(offer, false)
+  } else {
+    await axios.post('/offer/add', new FormData(e.target))
+    updateOfferList(offer, true)
+  }
   offer.value = defaultState
 }
 
@@ -30,6 +40,12 @@ const handleFileChange = (event) => {
 const removeImg = () => {
   offer.value.img = undefined
 }
+
+watch(() => props.offer, (newOffer) => {
+  if (newOffer) {
+    offer.value = {...newOffer};
+  }
+});
 
 </script>
 
@@ -42,7 +58,7 @@ const removeImg = () => {
         <!-- Modal header -->
         <div class="flex items-center justify-between p-4 md:p-5 border-b rounded-t dark:border-gray-600">
           <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
-            Créer une offre
+            {{ props.offer ? "Modifier" : 'Ajouter' }} une offre
           </h3>
           <button type="button"
                   class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white"
@@ -75,9 +91,9 @@ const removeImg = () => {
             <div v-show="offer.img" class="flex flex-col justify-center items-center gap-2">
               <img class="size-52" :src="offer.img" alt="">
               <button @click="removeImg"
+                      type="button"
                       class="text-white bg-red-700 hover:bg-red-800 focus:ring-4 focus:outline-none focus:ring-red-300 font-medium rounded-lg text-sm p-2.5 text-center inline-flex items-center me-2 dark:bg-red-600 dark:hover:bg-red-700 dark:focus:ring-red-800">
                 <i class="fa-solid fa-trash"></i>
-                <span class="sr-only">Icon description</span>
               </button>
             </div>
           </div>

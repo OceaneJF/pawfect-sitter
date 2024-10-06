@@ -54,10 +54,16 @@
                             <span class="text-lg font-bold">Téléphone :</span> {{ offer.user.phone ?? "Pas de téléphone" }}
                         </p>
                         <p>
-                            <span class="text-lg font-bold">FaceBook :</span> {{ offer.user.facebook ?? "Pas de facebook" }}
+                            <span class="text-lg font-bold">Facebook :</span> <a
+                                    class="font-medium text-indigo-500 hover:underline"
+                                    target="_blank"
+                                    href="{{ offer.user.facebook }}">{{ offer.user.facebook ?? "Pas de facebook" }}</a>
                         </p>
                         <p>
-                            <span class="text-lg font-bold">Instagram :</span> {{ offer.user.instagram ?? "Pas de instagram" }}
+                            <span class="text-lg font-bold">Instagram :</span> <a
+                                    class="font-medium text-indigo-500 hover:underline"
+                                    target="_blank"
+                                    href="{{ offer.user.instagram }}">{{ offer.user.instagram ?? "Pas de instagram" }}</a>
                         </p>
                     </div>
                 </div>

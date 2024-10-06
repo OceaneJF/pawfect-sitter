@@ -110,6 +110,51 @@ class OfferController extends AbstractController
         return $this->json([], 200);
     }
 
+    #[Route('/offer/update/{id}', name: 'app_offer_update')]
+    #[IsGranted('ROLE_USER')]
+    public function updateOfferToUser(int $id, Request $request, OfferRepository $offerRepository, EntityManagerInterface $em): JsonResponse
+    {
+        $user = $this->getUser();
+        $offer = $offerRepository->find($id);
+        $form = $this->createForm(OfferType::class, $offer);
+        $form->handleRequest($request);
+
+        if (!$form->isSubmitted() || !$form->isValid()) {
+            $errors = [];
+            foreach ($form->getErrors(true) as $error) {
+                $errors[$error->getOrigin()->getName()] = $error->getMessage();
+            }
+
+            return new JsonResponse($errors, 400);
+        }
+
+        /** @var UploadedFile $file */
+        $file = $form->get('imageFile')->getData();
+
+        if ($file) {
+            $newFilename = uniqid() . '.' . $file->guessExtension();
+
+            try {
+                $file->move(
+                    "img/animals",
+                    $newFilename
+                );
+            } catch (FileException $e) {
+                return $this->json(['error' => 'File upload failed'], 500);
+            }
+            $offer->setImageName($newFilename);
+        }
+
+        $offer->setUser($user);
+        $user->addOffer($offer);
+
+        $em->persist($user);
+        $em->persist($offer);
+        $em->flush();
+
+        return $this->json([], 200);
+    }
+
     #[Route('/offer/detete/{id}', name: 'app_offer_delete')]
     #[IsGranted('ROLE_USER')]
     public function removeOfferToUser(int $id, OfferRepository $offerRepository, EntityManagerInterface $em): JsonResponse
