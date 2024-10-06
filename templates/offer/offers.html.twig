@@ -1,0 +1,11 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Offers list!{% endblock %}
+
+{% block body %}
+    <div class="flex justify-center gap-6 flex-wrap mt-10">
+        {% for offer in offers %}
+            {% include '/offer/_card.html.twig' %}
+        {% endfor %}
+    </div>
+{% endblock %}
