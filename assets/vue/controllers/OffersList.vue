@@ -46,7 +46,7 @@ provide("updateOfferList", updateOfferList)
           type="button">
     Ajouter une offre
   </button>
-  <div class="flex justify-start gap-6 flex-wrap mt-10">
+  <div class="flex justify-center md:justify-start gap-6 flex-wrap mt-10">
     <article
         v-for="offer in offersList"
         class="w-72 bg-white group relative rounded-lg overflow-hidden shadow-lg hover:shadow-2xl transform duration-200 ">
