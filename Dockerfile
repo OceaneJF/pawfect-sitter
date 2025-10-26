@@ -11,7 +11,7 @@ RUN apk add --no-cache \
     icu-dev oniguruma-dev libzip-dev \
     libpng-dev libjpeg-turbo-dev libwebp-dev
 
-# Dépendances build pour phpize et extensions (seront supprimées ensuite)
+# Dépendances build pour phpize et extensions (supprimées ensuite)
 RUN apk add --no-cache --virtual .build-deps $PHPIZE_DEPS
 
 # Extensions PHP nécessaires à Symfony
@@ -29,6 +29,9 @@ RUN { \
       echo "opcache.preload_user=www-data"; \
       echo "opcache.validate_timestamps=0"; \
     } > /usr/local/etc/php/conf.d/symfony.ini
+
+# Nettoyage des deps de build
+RUN apk del .build-deps
 
 WORKDIR /var/www/html
 
@@ -63,16 +66,15 @@ RUN (npm run build || yarn build || pnpm build) || \
 ##########################################
 FROM php-base AS prod
 ENV APP_ENV=prod
-
 WORKDIR /var/www/html
 
 COPY . ./
 COPY --from=vendor /app/vendor ./vendor
 COPY --from=assets-builder /app/public ./public
 
-# Droits et warmup
-RUN chown -R www-data:www-data var public \
- && mkdir -p var/cache var/log \
+# Crée les répertoires écrits par Symfony puis warmup
+RUN mkdir -p var/cache var/log \
+ && chown -R www-data:www-data var public \
  && php bin/console cache:clear --no-warmup --env=prod \
  && php bin/console cache:warmup --env=prod
 
@@ -88,12 +90,11 @@ FROM php-base AS dev
 ENV APP_ENV=dev
 WORKDIR /var/www/html
 
-# Node.js + Symfony CLI pour dev local
-RUN apk add --no-cache nodejs npm 
+COPY --chown=www-data:www-data . ./
 
-COPY . ./
-
-RUN chown -R www-data:www-data var public
+# S'assurer que les répertoires existent même s'ils sont ignorés par .dockerignore
+RUN mkdir -p var/cache var/log public \
+ && chown -R www-data:www-data var public
 
 EXPOSE 9000
 USER www-data
