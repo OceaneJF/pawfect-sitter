@@ -90,10 +90,8 @@ WORKDIR /var/www/html
 
 # Node.js + Symfony CLI pour dev local
 RUN apk add --no-cache nodejs npm \
- && wget -qO - https://get.symfony.com/cli/installer | bash \
- && mv /root/.symfony*/bin/symfony /usr/local/bin/symfony
 
-COPY composer.json composer.lock symfony.lock* ./
+COPY composer.json composer.lock ./
 RUN --mount=type=cache,target=/tmp/composer \
     composer install --prefer-dist --no-progress --no-interaction
 
