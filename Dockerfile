@@ -1,39 +1,114 @@
-# --- 1) Vendors PHP ---
-FROM composer:2 AS vendor
-WORKDIR /app
+# syntax=docker/dockerfile:1.7
 
-COPY composer.json composer.lock ./
-RUN composer install --no-dev --no-interaction --prefer-dist --no-progress
+############################
+# Base PHP (extensions)
+############################
+FROM php:8.3-fpm-alpine AS php-base
 
-COPY . .
-RUN composer install --no-dev --no-interaction --prefer-dist --no-progress
+# Dépendances système utiles (intl, gd, zip, etc.)
+RUN apk add --no-cache \
+    bash git unzip icu-dev oniguruma-dev \
+    libzip-dev libpng-dev libjpeg-turbo-dev libwebp-dev \
+    shadow
 
-# --- 2) Runtime Apache + PHP ---
-FROM php:8.2-apache
+# Extensions PHP courantes pour Symfony
+RUN docker-php-ext-configure gd --with-jpeg --with-webp \
+ && docker-php-ext-install -j$(nproc) \
+    intl pdo_mysql opcache gd zip
 
-# Extensions fréquemment utiles pour Symfony
-RUN apt-get update && apt-get install -y --no-install-recommends \
-      libicu-dev libzip-dev libpng-dev unzip git \
-  && docker-php-ext-configure intl \
-  && docker-php-ext-install -j"$(nproc)" intl pdo_mysql zip gd \
-  && docker-php-ext-enable opcache \
-  && a2enmod rewrite headers \
-  && rm -rf /var/lib/apt/lists/*
+# APCu pour le cache applicatif
+RUN pecl install apcu \
+ && docker-php-ext-enable apcu
 
-# Servir /public
-RUN sed -ri -e 's!/var/www/html!/var/www/html/public!g' /etc/apache2/sites-available/000-default.conf \
- && sed -ri -e 's/DocumentRoot .*/DocumentRoot \/var\/www\/html\/public/' /etc/apache2/sites-available/000-default.conf
+# Réglages PHP raisonnables
+RUN { \
+      echo "memory_limit=128M"; \
+      echo "opcache.enable=1"; \
+      echo "opcache.preload_user=www-data"; \
+      echo "opcache.validate_timestamps=0"; \
+    } > /usr/local/etc/php/conf.d/symfony.ini
 
 WORKDIR /var/www/html
 
-# Copie code + vendors
-COPY --chown=www-data:www-data --from=vendor /app /var/www/html
+############################
+# Composer (vendors)
+############################
+FROM composer:2 AS vendor
+WORKDIR /app
+# Copie ciblée pour tirer parti du cache Docker
+COPY composer.json composer.lock symfony.lock* ./
+RUN composer install --no-dev --prefer-dist --no-progress --no-interaction
+# Pour le dev, on fera un install complet dans la cible dev si besoin
 
-# Permissions cache/logs
-RUN mkdir -p var && chown -R www-data:www-data var
+############################
+# Build des assets (Vite ou Encore)
+############################
+FROM node:20-alpine AS assets-builder
+WORKDIR /app
+# Copie des manifests pour cache
+COPY package.json* package-lock.json* yarn.lock* pnpm-lock.yaml* ./
+# Installation dépendances front (on essaie npm puis yarn)
+RUN --mount=type=cache,target=/root/.npm \
+    (npm ci || (npm install -g corepack && corepack enable && yarn install --frozen-lockfile || pnpm install --frozen-lockfile))
+# Copie du code nécessaire à la compilation
+COPY assets ./assets
+# Si vous utilisez AssetMapper + Vite/Encore, il faut les fichiers suivants:
+COPY vite.config.* webpack.config.* postcss.config.* babel.config.* ./
+# Build, on tolère npm/yarn/pnpm
+RUN (npm run build || yarn build || pnpm build) || \
+    (echo "Aucun script build trouvé. Ignorer si AssetMapper sans bundler.")
 
-# (Option) warmup cache prod — à activer si pas de commande DB nécessaire ici
-# ENV APP_ENV=prod
-# RUN su -s /bin/sh -c "php bin/console cache:clear --env=prod && php bin/console cache:warmup --env=prod" www-data
+############################
+# PROD runtime
+############################
+FROM php-base AS prod
+ENV APP_ENV=prod
+WORKDIR /var/www/html
 
-EXPOSE 80
+# Copie du code applicatif
+COPY . ./
+
+# Vendors depuis l'étage Composer
+COPY --from=vendor /app/vendor ./vendor
+
+# Assets construits
+# Vite/Encore: public/build ; AssetMapper: public/assets (adaptez si besoin)
+COPY --from=assets-builder /app/public ./public
+
+# Droits et warmup du cache
+RUN chown -R www-data:www-data var public \
+ && mkdir -p var/cache var/log \
+ && php bin/console cache:clear --no-warmup --env=prod \
+ && php bin/console cache:warmup --env=prod
+
+USER www-data
+EXPOSE 9000
+CMD ["php-fpm"]
+
+############################
+# DEV runtime (hot reload possible)
+############################
+FROM php-base AS dev
+ENV APP_ENV=dev
+WORKDIR /var/www/html
+
+# Outils dev: Node pour Vite/Encore, Symfony CLI pratique
+RUN apk add --no-cache nodejs npm \
+ && wget -qO - https://get.symfony.com/cli/installer | bash \
+ && mv /root/.symfony*/bin/symfony /usr/local/bin/symfony
+
+# Copie et install Composer (avec dev)
+COPY composer.json composer.lock symfony.lock* ./
+RUN --mount=type=cache,target=/tmp/composer \
+    composer install --prefer-dist --no-progress --no-interaction
+
+# Copie du reste du projet
+COPY . ./
+
+# Prépare les répertoires d’écriture
+RUN chown -R www-data:www-data var public
+
+USER www-data
+EXPOSE 9000
+# php-fpm pour servir via un reverse-proxy (nginx/caddy) côté compose
+CMD ["php-fpm"]
