@@ -89,11 +89,7 @@ ENV APP_ENV=dev
 WORKDIR /var/www/html
 
 # Node.js + Symfony CLI pour dev local
-RUN apk add --no-cache nodejs npm \
-
-COPY composer.json composer.lock symfony.lock* ./
-RUN --mount=type=cache,target=/tmp/composer \
-    composer install --prefer-dist --no-progress --no-interaction
+RUN apk add --no-cache nodejs npm 
 
 COPY . ./
 
