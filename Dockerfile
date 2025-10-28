@@ -25,13 +25,14 @@ COPY tsconfig.json* ./
 # Copier les sources
 COPY assets ./assets
 COPY templates ./templates
+COPY public ./public
 
 # Variables d'environnement pour le build
 ENV NODE_ENV=production
 ENV NODE_OPTIONS=--max_old_space_size=4096
 
-# Build avec verbose pour voir les erreurs
-RUN npm run build || (cat /root/.npm/_logs/* && exit 1)
+# Build avec sortie complète
+RUN npm run build 2>&1 | tee build.log || (echo "=== BUILD FAILED ===" && cat build.log && exit 1)
 
 # Stage 2: PHP Application
 FROM php:8.2-fpm
@@ -84,17 +85,11 @@ RUN mkdir -p var/cache var/log && \
     chown -R www-data:www-data var/
 
 # Configuration PHP pour la production
-COPY <<EOF /usr/local/etc/php/conf.d/production.ini
-opcache.enable=1
-opcache.memory_consumption=256
-opcache.max_accelerated_files=20000
-opcache.validate_timestamps=0
-opcache.interned_strings_buffer=16
-realpath_cache_size=4096K
-realpath_cache_ttl=600
-EOF
+RUN echo "opcache.enable=1" >> /usr/local/etc/php/conf.d/opcache.ini && \
+    echo "opcache.memory_consumption=256" >> /usr/local/etc/php/conf.d/opcache.ini && \
+    echo "opcache.max_accelerated_files=20000" >> /usr/local/etc/php/conf.d/opcache.ini && \
+    echo "opcache.validate_timestamps=0" >> /usr/local/etc/php/conf.d/opcache.ini
 
 EXPOSE 8000
 
-# Utiliser un array pour CMD (recommandé)
-CMD ["sh", "-c", "php bin/console cache:clear && php bin/console cache:warmup && php -S 0.0.0.0:8000 -t public"]
+CMD ["sh", "-c", "php bin/console cache:clear --no-warmup && php bin/console cache:warmup && php -S 0.0.0.0:8000 -t public"]
