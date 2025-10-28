@@ -12,6 +12,8 @@ COPY package.json package-lock.json* ./
 RUN npm ci --legacy-peer-deps || npm install --legacy-peer-deps
 RUN npm install @symfony/ux-vue --save-dev --legacy-peer-deps || true
 
+RUN npm install @symfony/ux-vue@^2.0.0 --save-dev --legacy-peer-deps 2>/dev/null || echo "ux-vue already installed or not needed"
+
 # Copier les fichiers de configuration
 COPY webpack.config.js ./
 COPY babel.config.js* .babelrc* ./
