@@ -9,16 +9,11 @@ RUN apk add --no-cache python3 make g++ git
 COPY package.json package-lock.json* ./
 
 # Installer les dépendances + forcer l'installation de @symfony/ux-vue
-RUN npm ci --legacy-peer-deps || npm install --legacy-peer-deps
-RUN npm install @symfony/ux-vue --save-dev --legacy-peer-deps || true
-
-RUN npm install @symfony/ux-vue@^2.0.0 --save-dev --legacy-peer-deps 2>/dev/null || echo "ux-vue already installed or not needed"
+RUN npm install
 
 # Copier les fichiers de configuration
 COPY webpack.config.js ./
-COPY babel.config.js* .babelrc* ./
-COPY postcss.config.js* ./
-COPY tsconfig.json* ./
+COPY postcss.config.js ./
 
 # Copier les sources
 COPY assets ./assets
