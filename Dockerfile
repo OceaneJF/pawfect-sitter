@@ -26,6 +26,7 @@ ENV NODE_OPTIONS=--max_old_space_size=4096
 # Build
 RUN npm run build && \
     echo "=== Checking build output ===" && \
+    ls -la /app/public/build || echo "Build directory not found!"
 
 # Stage 2: PHP Application
 FROM php:8.2-fpm
