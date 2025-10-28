@@ -1,69 +1,54 @@
-# Stage 1: Build assets
-FROM node:18-alpine AS node_builder
-
-WORKDIR /app
-
-RUN apk add --no-cache python3 make g++ git
-
-# Copier package.json
-COPY package.json package-lock.json* ./
-
-# Installer les dépendances
-RUN npm install
-
-# Copier les fichiers de configuration
-COPY webpack.config.js ./
-COPY postcss.config.js* ./
-
-# Copier les sources
-COPY assets ./assets
-COPY templates ./templates
-COPY public ./public
-
-ENV NODE_ENV=production
-ENV NODE_OPTIONS=--max_old_space_size=4096
-
-# Build with verification
-RUN npm run build && \
-    echo "=== Checking build output ===" && \
-    ls -la /app/public/build/ && \
-    ls -la /app/public/build/entrypoints.json && \
-    echo "=== Build verification complete ==="
-
-# Stage 2: PHP Application
-FROM php:8.2-fpm
-
-RUN apt-get update && apt-get install -y \
-    git unzip libpq-dev libzip-dev libicu-dev \
-    && docker-php-ext-configure intl \
-    && docker-php-ext-install pdo pdo_mysql pdo_pgsql zip opcache intl \
-    && apt-get clean && rm -rf /var/lib/apt/lists/*
-
-COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
-
-WORKDIR /app
-
-COPY composer.json composer.lock symfony.lock* ./
-RUN composer install --no-dev --optimize-autoloader --no-scripts --no-interaction
-
-COPY . .
-
-# Copy build artifacts and verify
-COPY --from=node_builder /app/public/build ./public/build
-
-RUN echo "=== Verifying copied build files ===" && \
-    ls -la /app/public/build/ && \
-    test -f /app/public/build/entrypoints.json || (echo "ERROR: entrypoints.json not found!" && exit 1)
-
-RUN composer dump-autoload --optimize --classmap-authoritative && \
-    mkdir -p var/cache var/log && \
-    chown -R www-data:www-data var/ public/
-
-RUN echo "opcache.enable=1" >> /usr/local/etc/php/conf.d/opcache.ini && \
-    echo "opcache.memory_consumption=256" >> /usr/local/etc/php/conf.d/opcache.ini && \
-    echo "opcache.max_accelerated_files=20000" >> /usr/local/etc/php/conf.d/opcache.ini && \
-    echo "opcache.validate_timestamps=0" >> /usr/local/etc/php/conf.d/opcache.ini
-
-EXPOSE 8000
-
-CMD ["sh", "-c", "php bin/console cache:clear && php bin/console cache:warmup && php -S 0.0.0.0:8000 -t public public/index.php"]
+#25 10.49 <s> [webpack.Progress] 92% sealing asset processing WebpackManifestPlugin
+#25 10.51 <s> [webpack.Progress] 92% sealing asset processing
+#25 10.51 <s> [webpack.Progress] 93% sealing after asset optimization
+#25 10.51 <s> [webpack.Progress] 93% sealing after asset optimization
+#25 10.51 <s> [webpack.Progress] 94% sealing after seal
+#25 10.51 <s> [webpack.Progress] 94% sealing after seal
+#25 10.51 <s> [webpack.Progress] 99% done plugins
+#25 10.51 <s> [webpack.Progress] 99% done plugins clean-webpack-plugin
+#25 10.51 <s> [webpack.Progress] 99% done plugins Notifier
+#25 10.51 <s> [webpack.Progress] 99% done plugins FriendlyErrorsWebpackPlugin
+#25 10.55  ERROR  Failed to compile with 1 errors10:42:52 PM
+#25 10.55
+#25 10.55 Module build failed: Module not found:
+#25 10.55 "./assets/app.js" contains a reference to the file "@symfony/ux-vue".
+#25 10.55 This file can not be found, please check it for typos or update it if the file got moved.
+#25 10.55
+#25 10.55 <s> [webpack.Progress] 99% done plugins
+#25 10.55 <s> [webpack.Progress] 99%
+#25 10.55
+#25 10.55 <s> [webpack.Progress] 99% cache begin idle
+#25 10.55 <s> [webpack.Progress] 99% cache begin idle
+#25 10.55 <s> [webpack.Progress] 100%
+#25 10.55
+#25 10.55 <s> [webpack.Progress] 99% cache shutdown
+#25 10.55 <s> [webpack.Progress] 99% cache shutdown
+#25 10.55 <s> [webpack.Progress] 100%
+#25 10.55
+#25 10.56 Entrypoint app = runtime.8ab7f0c8.js 989.955cd3f5.js app.ab9b65e6.css app.3849d64b.js
+#25 10.56 webpack compiled with 2 errors
+#25 ERROR: process "/bin/sh -c npm run build &&     echo \"=== Checking build output ===\" &&     ls -la /app/public/build/ &&     ls -la /app/public/build/entrypoints.json &&     echo \"=== Build verification complete ===\"" did not complete successfully: exit code: 1
+------
+> [node_builder 11/11] RUN npm run build &&     echo "=== Checking build output ===" &&     ls -la /app/public/build/ &&     ls -la /app/public/build/entrypoints.json &&     echo "=== Build verification complete ===":
+10.55 <s> [webpack.Progress] 99% cache begin idle
+10.55 <s> [webpack.Progress] 99% cache begin idle
+10.55 <s> [webpack.Progress] 100%
+10.55
+10.55 <s> [webpack.Progress] 99% cache shutdown
+10.55 <s> [webpack.Progress] 99% cache shutdown
+10.55 <s> [webpack.Progress] 100%
+10.55
+10.56 Entrypoint app = runtime.8ab7f0c8.js 989.955cd3f5.js app.ab9b65e6.css app.3849d64b.js
+10.56 webpack compiled with 2 errors
+------
+Dockerfile:27
+--------------------
+|     # Build with verification
+| >>> RUN npm run build && \
+| >>>     echo "=== Checking build output ===" && \
+| >>>     ls -la /app/public/build/ && \
+| >>>     ls -la /app/public/build/entrypoints.json && \
+| >>>     echo "=== Build verification complete ==="
+|
+--------------------
+ERROR: failed to build: failed to solve: process "/bin/sh -c npm run build &&     echo \"=== Checking build output ===\" &&     ls -la /app/public/build/ &&     ls -la /app/public/build/entrypoints.json &&     echo \"=== Build verification complete ===\"" did not complete successfully: exit code: 1
