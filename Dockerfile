@@ -8,12 +8,12 @@ RUN apk add --no-cache python3 make g++ git
 # Copier package.json
 COPY package.json package-lock.json* ./
 
-# Installer les dépendances + forcer l'installation de @symfony/ux-vue
+# Installer les dépendances
 RUN npm install
 
 # Copier les fichiers de configuration
 COPY webpack.config.js ./
-COPY postcss.config.js ./
+COPY postcss.config.js* ./
 
 # Copier les sources
 COPY assets ./assets
@@ -23,10 +23,12 @@ COPY public ./public
 ENV NODE_ENV=production
 ENV NODE_OPTIONS=--max_old_space_size=4096
 
-# Build
+# Build with verification
 RUN npm run build && \
     echo "=== Checking build output ===" && \
-    ls -la /app/public/build || echo "Build directory not found!"
+    ls -la /app/public/build/ && \
+    ls -la /app/public/build/entrypoints.json && \
+    echo "=== Build verification complete ==="
 
 # Stage 2: PHP Application
 FROM php:8.2-fpm
@@ -45,7 +47,13 @@ COPY composer.json composer.lock symfony.lock* ./
 RUN composer install --no-dev --optimize-autoloader --no-scripts --no-interaction
 
 COPY . .
+
+# Copy build artifacts and verify
 COPY --from=node_builder /app/public/build ./public/build
+
+RUN echo "=== Verifying copied build files ===" && \
+    ls -la /app/public/build/ && \
+    test -f /app/public/build/entrypoints.json || (echo "ERROR: entrypoints.json not found!" && exit 1)
 
 RUN composer dump-autoload --optimize --classmap-authoritative && \
     mkdir -p var/cache var/log && \
