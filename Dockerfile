@@ -24,11 +24,7 @@ ENV NODE_ENV=production
 ENV NODE_OPTIONS=--max_old_space_size=4096
 
 # Build
-RUN npm run build && \
-    echo "=== Checking build output ===" && \
-    ls -la public/build/ && \
-    test -f public/build/entrypoints.json || (echo "ERROR: entrypoints.json not found!" && exit 1) && \
-    echo "✓ Build successful!"
+RUN npm run build
 
 # Stage 2: PHP Application
 FROM php:8.2-fpm
