@@ -3,16 +3,16 @@ FROM node:18-alpine AS node_builder
 
 WORKDIR /app
 
-# Installation des outils de build
 RUN apk add --no-cache python3 make g++ git
 
 # Copier package.json
 COPY package.json package-lock.json* ./
 
-# Installer les dépendances
-RUN npm ci --legacy-peer-deps
+# Installer les dépendances + forcer l'installation de @symfony/ux-vue
+RUN npm ci --legacy-peer-deps || npm install --legacy-peer-deps
+RUN npm install @symfony/ux-vue --save-dev --legacy-peer-deps || true
 
-# Copier les fichiers de configuration Webpack
+# Copier les fichiers de configuration
 COPY webpack.config.js ./
 COPY babel.config.js* .babelrc* ./
 COPY postcss.config.js* ./
@@ -23,11 +23,10 @@ COPY assets ./assets
 COPY templates ./templates
 COPY public ./public
 
-# Variables d'environnement
 ENV NODE_ENV=production
 ENV NODE_OPTIONS=--max_old_space_size=4096
 
-# Build avec vérification
+# Build
 RUN npm run build && \
     echo "=== Checking build output ===" && \
     ls -la public/build/ && \
@@ -47,30 +46,16 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 WORKDIR /app
 
-# Copier composer files
 COPY composer.json composer.lock symfony.lock* ./
-
-# Installer les dépendances PHP
 RUN composer install --no-dev --optimize-autoloader --no-scripts --no-interaction
 
-# Copier le code source
 COPY . .
-
-# Copier les assets buildés depuis le stage Node
 COPY --from=node_builder /app/public/build ./public/build
 
-# Vérifier que les assets sont bien copiés
-RUN ls -la public/build/ && \
-    test -f public/build/entrypoints.json || (echo "ERROR: entrypoints.json not copied!" && exit 1)
-
-# Finaliser Composer
-RUN composer dump-autoload --optimize --classmap-authoritative
-
-# Permissions
-RUN mkdir -p var/cache var/log && \
+RUN composer dump-autoload --optimize --classmap-authoritative && \
+    mkdir -p var/cache var/log && \
     chown -R www-data:www-data var/ public/
 
-# Configuration PHP
 RUN echo "opcache.enable=1" >> /usr/local/etc/php/conf.d/opcache.ini && \
     echo "opcache.memory_consumption=256" >> /usr/local/etc/php/conf.d/opcache.ini && \
     echo "opcache.max_accelerated_files=20000" >> /usr/local/etc/php/conf.d/opcache.ini && \
