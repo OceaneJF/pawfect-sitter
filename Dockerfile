@@ -1,101 +1,22 @@
-# syntax=docker/dockerfile:1.7
+# Si vous n'avez pas de Dockerfile, créez-en un :
+FROM php:8.2-fpm
 
-##########################################
-# PHP base avec extensions Symfony
-##########################################
-FROM php:8.3-fpm-alpine AS php-base
+RUN apt-get update && apt-get install -y \
+    git \
+    unzip \
+    libpq-dev \
+    && docker-php-ext-install pdo pdo_mysql pdo_pgsql
 
-# Dépendances runtime
-RUN apk add --no-cache \
-    bash git unzip shadow \
-    icu-dev oniguruma-dev libzip-dev \
-    libpng-dev libjpeg-turbo-dev libwebp-dev
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Dépendances build pour phpize et extensions (supprimées ensuite)
-RUN apk add --no-cache --virtual .build-deps $PHPIZE_DEPS
-
-# Extensions PHP nécessaires à Symfony
-RUN docker-php-ext-configure gd --with-jpeg --with-webp \
- && docker-php-ext-install -j"$(nproc)" intl pdo_mysql opcache gd zip
-
-# APCu via PECL
-RUN pecl install apcu \
- && docker-php-ext-enable apcu
-
-# Réglages PHP
-RUN { \
-      echo "memory_limit=512M"; \
-      echo "opcache.enable=1"; \
-      echo "opcache.preload_user=www-data"; \
-      echo "opcache.validate_timestamps=0"; \
-    } > /usr/local/etc/php/conf.d/symfony.ini
-
-# Nettoyage des deps de build
-RUN apk del .build-deps
-
-WORKDIR /var/www/html
-
-
-##########################################
-# Composer: installation vendor prod
-##########################################
-FROM composer:2 AS vendor
 WORKDIR /app
-COPY composer.json composer.lock symfony.lock* ./
-RUN composer install --no-dev --prefer-dist --no-progress --no-interaction
+COPY . /app
 
+RUN composer install --no-dev --optimize-autoloader
 
-##########################################
-# Build des assets (Encore ou Vite)
-##########################################
-FROM node:20-alpine AS assets-builder
-WORKDIR /app
+RUN php bin/console cache:clear --env=prod
+RUN php bin/console assets:install --env=prod
 
-COPY package.json* package-lock.json* yarn.lock* pnpm-lock.yaml* ./
-RUN --mount=type=cache,target=/root/.npm \
-    (npm ci || (npm install -g corepack && corepack enable && yarn install --frozen-lockfile || pnpm install --frozen-lockfile))
+EXPOSE 8000
 
-COPY assets ./assets
-COPY vite.config.* webpack.config.* postcss.config.* babel.config.* ./
-RUN (npm run build || yarn build || pnpm build) || \
-    (echo "Aucun script build trouvé. Ignorer si AssetMapper pur.")
-
-
-##########################################
-# PROD
-##########################################
-FROM php-base AS prod
-ENV APP_ENV=prod
-WORKDIR /var/www/html
-
-COPY . ./
-COPY --from=vendor /app/vendor ./vendor
-COPY --from=assets-builder /app/public ./public
-
-# Crée les répertoires écrits par Symfony puis warmup
-RUN mkdir -p var/cache var/log \
- && chown -R www-data:www-data var public \
- && php bin/console cache:clear --no-warmup --env=prod \
- && php bin/console cache:warmup --env=prod
-
-EXPOSE 9000
-USER www-data
-CMD ["php-fpm"]
-
-
-##########################################
-# DEV
-##########################################
-FROM php-base AS dev
-ENV APP_ENV=dev
-WORKDIR /var/www/html
-
-COPY --chown=www-data:www-data . ./
-
-# S'assurer que les répertoires existent même s'ils sont ignorés par .dockerignore
-RUN mkdir -p var/cache var/log public \
- && chown -R www-data:www-data var public
-
-EXPOSE 9000
-USER www-data
-CMD ["php-fpm"]
+CMD ["php", "-S", "0.0.0.0:8000", "-t", "public"]
